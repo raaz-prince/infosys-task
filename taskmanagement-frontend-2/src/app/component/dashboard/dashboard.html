@@ -1,0 +1,145 @@
+@if(showAnalytics){
+    <app-analytics
+    [tasks]="tasks"
+    (hideAnalytics)="hideAnalytics()">
+    </app-analytics>
+} @else{
+<div class="px-6 py-8">
+
+    <!-- ================= HEADER ================= -->
+    <div class="flex justify-between items-center mb-8">
+
+        <div>
+            <h1 class="text-2xl font-bold">Task Dashboard</h1>
+            <p class="text-gray-500 text-sm">
+                Manage and track your tasks
+            </p>
+        </div>
+
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition cursor-pointer"
+            (click)="openAddTask()">
+            + Add Task
+        </button>
+
+        @if (isAddTaskOpen) {
+        <app-add-task [users]="users" [task]="editingTask" [isEditMode]="editingTask !== null" (close)="closeAddTask()"
+            (save)="handleSave($event)">
+        </app-add-task>
+        }
+
+    </div>
+
+
+    <!-- ================= FILTERS ================= -->
+    <div class="flex gap-6 border-b mb-8 text-sm font-medium">
+
+        <button class="pb-2" (click)="changeFilter('ALL')" [ngClass]="{
+            'border-b-2 border-blue-600 text-blue-600': selectedFilter === 'ALL',
+            'text-gray-500 hover:text-black': selectedFilter !== 'ALL'
+          }">
+            All ({{ totalCount }})
+        </button>
+
+        <button class="pb-2" (click)="changeFilter(TaskStatus.TO_DO)" [ngClass]="{
+            'border-b-2 border-blue-600 text-blue-600': selectedFilter === TaskStatus.TO_DO,
+            'text-gray-500 hover:text-black': selectedFilter !== TaskStatus.TO_DO
+          }">
+            To Do ({{ todoCount }})
+        </button>
+
+        <button class="pb-2" (click)="changeFilter(TaskStatus.IN_PROGRESS)" [ngClass]="{
+            'border-b-2 border-blue-600 text-blue-600': selectedFilter === TaskStatus.IN_PROGRESS,
+            'text-gray-500 hover:text-black': selectedFilter !== TaskStatus.IN_PROGRESS
+          }">
+            In Progress ({{ inProgressCount }})
+        </button>
+
+        <button class="pb-2" (click)="changeFilter(TaskStatus.COMPLETED)" [ngClass]="{
+            'border-b-2 border-blue-600 text-blue-600': selectedFilter === TaskStatus.COMPLETED,
+            'text-gray-500 hover:text-black': selectedFilter !== TaskStatus.COMPLETED
+          }">
+            Completed ({{ completedCount }})
+        </button>
+
+    </div>
+
+
+    <!-- ================= SUMMARY CARDS ================= -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+        <div class="bg-gray-50 p-4 rounded-lg shadow-sm text-center">
+            <p class="text-2xl font-bold">{{ totalCount }}</p>
+            <p class="text-gray-500 text-sm">Total Tasks</p>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-lg shadow-sm text-center">
+            <p class="text-2xl font-bold text-blue-600">{{ todoCount }}</p>
+            <p class="text-gray-500 text-sm">To Do</p>
+        </div>
+
+        <div class="bg-yellow-50 p-4 rounded-lg shadow-sm text-center">
+            <p class="text-2xl font-bold text-yellow-600">{{ inProgressCount }}</p>
+            <p class="text-gray-500 text-sm">In Progress</p>
+        </div>
+
+        <div class="bg-green-50 p-4 rounded-lg shadow-sm text-center">
+            <p class="text-2xl font-bold text-green-600">{{ completedCount }}</p>
+            <p class="text-gray-500 text-sm">Completed</p>
+        </div>
+
+    </div>
+
+
+    <!-- ================= TASK LIST ================= -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        @for (task of filteredTasks; track task.id) {
+        <app-task-card [task]="task" (viewTask)="openModal($event)" (editTask)="openEditTask($event)"
+            (deleteTask)="handleDelete($event)" (statusChange)="handleStatusChange($event)">
+        </app-task-card>
+        }
+
+    </div>
+
+
+    <!-- ================= MODAL ================= -->
+    @if (selectedTask) {
+    <app-task-modal [task]="selectedTask" (close)="closeModal()" (edit)="openEditTask($event)"
+        (delete)="handleDelete($event)">
+    </app-task-modal>
+    }
+
+
+    <!-- ================= EMPTY STATES ================= -->
+
+    @if (totalCount === 0) {
+
+    <div class="flex flex-col items-center justify-center text-center py-16 px-6">
+
+        <h3 class="text-lg font-semibold text-gray-800">
+            No tasks found
+        </h3>
+
+        <p class="text-sm text-gray-500 mt-2 max-w-sm">
+            Looks like there are no tasks yet.
+            Create a new task to get started.
+        </p>
+
+        <button
+            class="mt-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow transition"
+            (click)="openAddTask()">
+            Add New Task
+        </button>
+
+    </div>
+
+    } @else if (filteredTasks.length === 0) {
+
+    <div class="text-center text-gray-500 py-10">
+        No tasks found for this filter.
+    </div>
+
+    }
+
+</div>
+}

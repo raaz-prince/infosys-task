@@ -1,0 +1,200 @@
+@if (task) {
+
+<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" (click)="close.emit()">
+
+    <div class="relative bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center bg-slate-800 text-white px-6 py-3">
+
+            <h2 class="font-semibold">
+                Task Detail — {{ task.title }}
+            </h2>
+
+            <button class="text-sm hover:opacity-80 cursor-pointer" (click)="close.emit()">
+                [x] Close
+            </button>
+
+        </div>
+
+        <!-- Content -->
+        <div class="grid grid-cols-2 divide-x">
+
+            <!-- LEFT -->
+            <div class="p-6 space-y-4">
+
+                <h3 class="text-lg font-semibold">
+                    {{ task.title }}
+                </h3>
+
+                <div>
+                    <p class="text-xs text-gray-500 font-semibold mb-1">
+                        DESCRIPTION
+                    </p>
+
+                    <p class="text-gray-700">
+                        {{ task.description }}
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-sm">
+
+                    <!-- Status -->
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold mb-1">
+                            STATUS
+                        </p>
+
+                        <span class="px-2 py-1 rounded text-xs" [ngClass]="getStatusClasses(task.status)">
+                            {{ task.status }}
+                        </span>
+                    </div>
+
+                    <!-- Priority -->
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold mb-1">
+                            PRIORITY
+                        </p>
+
+                        <span class="px-2 py-1 rounded text-xs bg-red-100 text-red-600">
+                            {{ task.priority }}
+                        </span>
+                    </div>
+
+                    <!-- Due Date -->
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold mb-1">
+                            DUE DATE
+                        </p>
+
+                        <input type="text" [value]="task.dueDate" disabled
+                            class="w-full border rounded-md px-2 py-1 text-sm bg-gray-50" />
+                    </div>
+
+                    <!-- Assigned -->
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold mb-1">
+                            ASSIGNED TO
+                        </p>
+
+                        <input type="text" [value]="task.assignee?.fullName ??'Unassigned'" disabled
+                            class="w-full border rounded-md px-2 py-1 text-sm bg-gray-50" />
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <div class="pt-6 flex gap-3">
+
+                    <button class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                        (click)="edit.emit(task)">
+                        Edit Task
+                    </button>
+
+                    <button class="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm"
+                        (click)="delete.emit(task.id)">
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT COMMENTS -->
+            <div class="p-6 flex flex-col">
+
+                <h3 class="font-semibold mb-3">
+                    Comments
+                </h3>
+
+                <!-- COMMENT LIST -->
+                <div class="flex-1 min-h-[120px] space-y-4 overflow-y-auto text-sm flex flex-col">
+
+                    <!-- LOADING -->
+                    @if (commentsLoading) {
+
+                    <div class="flex justify-center items-center py-6">
+
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600">
+                        </div>
+
+                    </div>
+
+                    }
+
+                    <!-- NO COMMENTS -->
+                    @else if (comments.length === 0) {
+
+                    <div class="text-gray-500">
+                        No comments yet
+                    </div>
+
+                    }
+
+                    <!-- COMMENTS -->
+                    @else {
+
+                    @for (comment of comments; track comment.id) {
+
+                    <div class="flex justify-between items-start gap-3">
+
+                        <div>
+
+                            <p class="font-semibold text-gray-800">
+                                {{ comment.authorName }}
+
+                                <span class="text-gray-400 text-xs ml-2">
+                                    {{ comment.createdAt | timeAgo }}
+                                </span>
+                            </p>
+
+                            <p class="text-gray-600">
+                                {{ comment.body }}
+                            </p>
+
+                        </div>
+
+                        <!-- DELETE BUTTON -->
+                        <!-- @if (comment.authorId === currentUserId) {
+
+                        <button class="text-red-500 text-xs hover:underline cursor-pointer"
+                            (click)="deleteComment(comment.id)">
+                            Delete
+                        </button> 
+
+                        }-->
+
+                    </div>
+
+                    }
+
+                    }
+
+                </div>
+
+                <!-- ADD COMMENT -->
+                <div class="mt-4 flex gap-2">
+
+                    <textarea [(ngModel)]="commentText" placeholder="Add a comment..." rows="2"
+                        class="flex-1 border rounded-md px-3 py-2 text-sm">
+    </textarea>
+
+                    <button [disabled]="!commentText.trim()" (click)="postComment()"
+                        class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+
+                        Post Comment
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+}

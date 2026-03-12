@@ -1,0 +1,37 @@
+<header class="bg-indigo-600 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+        <!-- Brand -->
+        <a routerLink="/"
+            class="text-2xl font-bold tracking-wide cursor-pointer hover:underline underline-offset-4 decoration-2">
+            TaskManagement
+        </a>
+
+        <nav class="flex items-center gap-6 text-lg">
+
+            @if (!authService.isAuthenticated()) {
+
+            <a routerLink="/register" routerLinkActive="underline"
+                class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
+                Register
+            </a>
+
+            <a routerLink="/login" routerLinkActive="underline"
+                class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
+                Login
+            </a>
+
+            }
+
+            @if (authService.isAuthenticated()) {
+
+            <button (click)="logout()"
+                class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100 cursor-pointer">
+                Logout
+            </button>
+
+            }
+
+        </nav>
+    </div>
+</header>
