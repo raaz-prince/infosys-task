@@ -1,37 +1,36 @@
-<header class="bg-indigo-600 text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+<header class="bg-slate-800 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
 
-        <!-- Brand -->
-        <a routerLink="/"
-            class="text-2xl font-bold tracking-wide cursor-pointer hover:underline underline-offset-4 decoration-2">
-            TaskManagement
+        <!-- Brand (dot + TaskFlow) -->
+        <a routerLink="/" class="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-wide cursor-pointer">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-900"></span>
+            TaskFlow
         </a>
 
-        <nav class="flex items-center gap-6 text-lg">
+        <!-- Right: greeting + profile pill -->
+        <div class="flex items-center gap-3">
+            <span class="hidden sm:block text-sm sm:text-base opacity-90">Hello, Alex</span>
+            <div class="w-9 h-9 rounded-md bg-white/20 border border-white/20"></div>
 
             @if (!authService.isAuthenticated()) {
-
-            <a routerLink="/register" routerLinkActive="underline"
-                class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
-                Register
-            </a>
-
-            <a routerLink="/login" routerLinkActive="underline"
-                class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
-                Login
-            </a>
-
+            <nav class="flex items-center gap-4 text-sm sm:text-base">
+                <a routerLink="/register"
+                    class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
+                    Register
+                </a>
+                <a routerLink="/login"
+                    class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
+                    Login
+                </a>
+            </nav>
             }
 
             @if (authService.isAuthenticated()) {
-
             <button (click)="logout()"
-                class="cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100 cursor-pointer">
+                class="text-sm sm:text-base cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">
                 Logout
             </button>
-
             }
-
-        </nav>
+        </div>
     </div>
 </header>

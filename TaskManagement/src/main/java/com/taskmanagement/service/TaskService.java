@@ -12,6 +12,7 @@ import com.taskmanagement.dto.TaskRequest;
 import com.taskmanagement.dto.TaskResponse;
 import com.taskmanagement.dto.UpdateTaskRequest;
 import com.taskmanagement.dto.UserDto;
+import com.taskmanagement.entity.ActionCode;
 import com.taskmanagement.entity.Status;
 import com.taskmanagement.entity.Task;
 import com.taskmanagement.repo.TaskRepository;
@@ -25,6 +26,7 @@ public class TaskService {
 
 	private final TaskRepository taskRepository;
 	private final UserRepository userRepository;
+	private final ActivityLogService activityLogService;
 
 	@Transactional
 	public TaskResponse addTask(TaskRequest request, String email) {
@@ -42,6 +44,9 @@ public class TaskService {
 				.priority(request.getPriority()).build();
 
 		Task savedTask = taskRepository.save(task);
+
+		activityLogService.logAction(savedTask.getId(), email, ActionCode.TASK_CREATED,
+				user.getName() + " created task \"" + task.getTitle() + "\"");
 
 		return convertToResponse(savedTask);
 	}
@@ -80,6 +85,10 @@ public class TaskService {
 		task.setUpdatedAt(LocalDate.now());
 
 		Task updatedTask = taskRepository.save(task);
+
+		activityLogService.logAction(id, email, ActionCode.TASK_STATUS_CHANGED,
+				user.getName() + " changed status of \"" + task.getTitle() + "\" to " + updatedTask.getStatus().name());
+
 		return convertToResponse(updatedTask);
 	}
 
@@ -89,7 +98,7 @@ public class TaskService {
 		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
 		Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
-		
+
 		Optional<User> assignee = Optional.empty();
 
 		if (req.getAssignedTo() != null) {
