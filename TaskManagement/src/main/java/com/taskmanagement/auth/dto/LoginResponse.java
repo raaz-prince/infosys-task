@@ -1,4 +1,6 @@
 package com.taskmanagement.auth.dto;
 
-public record LoginResponse(String message, String token) {
+import com.taskmanagement.dto.UserDto;
+
+public record LoginResponse(String token, UserDto user) {
 }

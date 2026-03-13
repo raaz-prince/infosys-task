@@ -24,112 +24,216 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TaskService {
 
-	private final TaskRepository taskRepository;
-	private final UserRepository userRepository;
-	private final ActivityLogService activityLogService;
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+    private final ActivityLogService activityLogService;
 
-	@Transactional
-	public TaskResponse addTask(TaskRequest request, String email) {
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+    @Transactional
+    public TaskResponse addTask(TaskRequest request, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		Optional<User> assignee = Optional.empty();
+        Optional<User> assigneeOpt = Optional.empty();
+        if (request.getAssignedTo() != null) {
+            assigneeOpt = userRepository.findById(request.getAssignedTo());
+        }
 
-		if (request.getAssignedTo() != null) {
-			assignee = userRepository.findById(request.getAssignedTo());
-		}
+        Task task = Task.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .status(request.getStatus())
+                .createdAt(LocalDate.now())
+                .updatedAt(LocalDate.now())
+                .dueDate(request.getDueDate())
+                .user(user)
+                .assignee(assigneeOpt.orElse(null))
+                .priority(request.getPriority())
+                .build();
 
-		Task task = Task.builder().title(request.getTitle()).description(request.getDescription())
-				.status(request.getStatus()).createdAt(LocalDate.now()).updatedAt(LocalDate.now())
-				.dueDate(request.getDueDate()).user(user).assignee(assignee.orElse(null))
-				.priority(request.getPriority()).build();
+        Task savedTask = taskRepository.save(task);
 
-		Task savedTask = taskRepository.save(task);
+        // Log: TASK_CREATED
+        activityLogService.logAction(
+                savedTask.getId(),
+                email,
+                ActionCode.TASK_CREATED,
+                user.getName() + " created task \"" + savedTask.getTitle() + "\""
+        );
 
-		activityLogService.logAction(savedTask.getId(), email, ActionCode.TASK_CREATED,
-				user.getName() + " created task \"" + task.getTitle() + "\"");
+        // Log: TASK_ASSIGNED (if created with an assignee)
+        if (savedTask.getAssignee() != null) {
+            activityLogService.logAction(
+                    savedTask.getId(),
+                    email,
+                    ActionCode.TASK_ASSIGNED,
+                    user.getName() + " assigned \"" + savedTask.getTitle() + "\" to " + savedTask.getAssignee().getName()
+            );
+        }
 
-		return convertToResponse(savedTask);
-	}
+        return convertToResponse(savedTask);
+    }
 
-	@Transactional
-	public List<TaskResponse> getAllTasks(String email) {
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+    @Transactional
+    public List<TaskResponse> getAllTasks(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		return taskRepository.findByUserId(user.getId()).stream().map(this::convertToResponse).toList();
-	}
+        return taskRepository.findByUserId(user.getId())
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
 
-	@Transactional
-	public void deleteTask(Long id, String email) {
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+    @Transactional
+    public void deleteTask(Long id, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
 
-		if (!task.getUser().getId().equals(user.getId())) {
-			throw new RuntimeException("You are not authorized to perform this action");
-		}
+        if (!task.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to perform this action");
+        }
 
-		taskRepository.delete(task);
-	}
+        // Log before deletion so we still have context like title
+        activityLogService.logAction(
+                task.getId(),
+                email,
+                ActionCode.TASK_DELETED,
+                user.getName() + " deleted task \"" + task.getTitle() + "\""
+        );
 
-	@Transactional
-	public TaskResponse updateTaskStatus(Long id, Status status, String email) {
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        taskRepository.delete(task);
+    }
 
-		Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+    @Transactional
+    public TaskResponse updateTaskStatus(Long id, Status status, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		if (!task.getUser().getId().equals(user.getId())) {
-			throw new RuntimeException("You are not authorized to perform this action");
-		}
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
 
-		task.setStatus(status);
-		task.setUpdatedAt(LocalDate.now());
+        if (!task.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to perform this action");
+        }
 
-		Task updatedTask = taskRepository.save(task);
+        Status oldStatus = task.getStatus();
+        task.setStatus(status);
+        task.setUpdatedAt(LocalDate.now());
 
-		activityLogService.logAction(id, email, ActionCode.TASK_STATUS_CHANGED,
-				user.getName() + " changed status of \"" + task.getTitle() + "\" to " + updatedTask.getStatus().name());
+        Task updatedTask = taskRepository.save(task);
 
-		return convertToResponse(updatedTask);
-	}
+        // Log: TASK_STATUS_CHANGED with from → to
+        activityLogService.logAction(
+                updatedTask.getId(),
+                email,
+                ActionCode.TASK_STATUS_CHANGED,
+                user.getName() + " changed status of \"" + updatedTask.getTitle() + "\" from " +
+                        oldStatus.name() + " to " + updatedTask.getStatus().name()
+        );
 
-	@Transactional
-	public TaskResponse updateTask(Long id, UpdateTaskRequest req, String email) {
+        return convertToResponse(updatedTask);
+    }
 
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+    @Transactional
+    public TaskResponse updateTask(Long id, UpdateTaskRequest req, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
 
-		Optional<User> assignee = Optional.empty();
+        if (!task.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to perform this action");
+        }
 
-		if (req.getAssignedTo() != null) {
-			assignee = userRepository.findById(req.getAssignedTo());
-		}
+        // Capture old values for diff logging
+        Status oldStatus = task.getStatus();
+        var oldPriority = task.getPriority();
+        User oldAssignee = task.getAssignee();
 
-		if (!task.getUser().getId().equals(user.getId())) {
-			throw new RuntimeException("You are not authorized to perform this action");
-		}
+        Optional<User> newAssigneeOpt = Optional.empty();
+        if (req.getAssignedTo() != null) {
+            newAssigneeOpt = userRepository.findById(req.getAssignedTo());
+        }
+        User newAssignee = newAssigneeOpt.orElse(null);
 
-		task.setTitle(req.getTitle());
-		task.setDescription(req.getDescription());
-		task.setAssignee(assignee.orElse(null));
-		task.setStatus(req.getStatus());
-		task.setPriority(req.getPriority());
-		task.setDueDate(req.getDueDate());
-		task.setUpdatedAt(LocalDate.now());
+        // Apply updates
+        task.setTitle(req.getTitle());
+        task.setDescription(req.getDescription());
+        task.setAssignee(newAssignee);
+        task.setStatus(req.getStatus());
+        task.setPriority(req.getPriority());
+        task.setDueDate(req.getDueDate());
+        task.setUpdatedAt(LocalDate.now());
 
-		Task updatedTask = taskRepository.save(task);
-		return convertToResponse(updatedTask);
-	}
+        Task updatedTask = taskRepository.save(task);
 
-	private TaskResponse convertToResponse(Task task) {
-		return TaskResponse.builder().id(task.getId()).title(task.getTitle()).description(task.getDescription())
-				.status(task.getStatus().name()).createdAt(task.getCreatedAt()).dueDate(task.getDueDate())
-				.updatedAt(task.getUpdatedAt())
+        // ===== Activity logs based on diffs =====
 
-				.assignee(task.getAssignee() != null
-						? new UserDto(task.getAssignee().getId(), task.getAssignee().getName())
-						: null)
+        // Status change (if updated here)
+        if (oldStatus != null && updatedTask.getStatus() != null && oldStatus != updatedTask.getStatus()) {
+            activityLogService.logAction(
+                    updatedTask.getId(),
+                    email,
+                    ActionCode.TASK_STATUS_CHANGED,
+                    user.getName() + " changed status of \"" + updatedTask.getTitle() + "\" from " +
+                            oldStatus.name() + " to " + updatedTask.getStatus().name()
+            );
+        }
 
-				.priority(task.getPriority().name()).build();
-	}
+        // Priority change
+        if (oldPriority != null && updatedTask.getPriority() != null && oldPriority != updatedTask.getPriority()) {
+            activityLogService.logAction(
+                    updatedTask.getId(),
+                    email,
+                    ActionCode.TASK_PRIORITY_CHANGED,
+                    user.getName() + " changed priority of \"" + updatedTask.getTitle() + "\" from " +
+                            oldPriority.name() + " to " + updatedTask.getPriority().name()
+            );
+        }
+
+        // Assignee change
+        if ((oldAssignee == null && newAssignee != null) ||
+            (oldAssignee != null && newAssignee == null) ||
+            (oldAssignee != null && newAssignee != null && !oldAssignee.getId().equals(newAssignee.getId()))) {
+
+            String message;
+            if (oldAssignee == null && newAssignee != null) {
+                message = user.getName() + " assigned \"" + updatedTask.getTitle() + "\" to " + newAssignee.getName();
+            } else if (oldAssignee != null && newAssignee == null) {
+                message = user.getName() + " unassigned \"" + updatedTask.getTitle() + "\" (was " + oldAssignee.getName() + ")";
+            } else {
+                message = user.getName() + " reassigned \"" + updatedTask.getTitle() + "\" from " +
+                          oldAssignee.getName() + " to " + newAssignee.getName();
+            }
+
+            activityLogService.logAction(
+                    updatedTask.getId(),
+                    email,
+                    ActionCode.TASK_ASSIGNED,
+                    message
+            );
+        }
+
+        return convertToResponse(updatedTask);
+    }
+
+    private TaskResponse convertToResponse(Task task) {
+        return TaskResponse.builder()
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .status(task.getStatus().name())
+                .createdAt(task.getCreatedAt())
+                .dueDate(task.getDueDate())
+                .updatedAt(task.getUpdatedAt())
+                .assignee(task.getAssignee() != null
+                        ? new UserDto(task.getAssignee().getId(), task.getAssignee().getName(), task.getAssignee().getEmail())
+                        : null)
+                .priority(task.getPriority().name())
+                .build();
+    }
 }

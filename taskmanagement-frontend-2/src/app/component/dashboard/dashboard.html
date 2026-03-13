@@ -1,79 +1,94 @@
-@if (showAnalytics) {
-
-<app-analytics [tasks]="tasks" (hideAnalytics)="hideAnalytics()">
-</app-analytics>
-
-} @else {
-
 <!-- FULL SCREEN WRAPPER -->
-<div class="w-full h-screen flex flex-col px-6 py-6 bg-gray-100">
+<div class="w-full min-h-screen flex flex-col px-4 sm:px-6 py-6 bg-gray-100">
 
     <!-- ================= SUMMARY CARDS ================= -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
         <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
             <p class="text-sm text-gray-500">Total Tasks</p>
-            <p class="text-2xl font-bold">{{ totalCount }}</p>
+            <p class="text-xl sm:text-2xl font-bold">{{ totalCount }}</p>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-400 shadow-sm">
             <p class="text-sm text-gray-500">To-Do</p>
-            <p class="text-2xl font-bold">{{ todoCount }}</p>
+            <p class="text-xl sm:text-2xl font-bold">{{ todoCount }}</p>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500 shadow-sm">
             <p class="text-sm text-gray-500">In Progress</p>
-            <p class="text-2xl font-bold">{{ inProgressCount }}</p>
+            <p class="text-xl sm:text-2xl font-bold">{{ inProgressCount }}</p>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-green-500 shadow-sm">
             <p class="text-sm text-gray-500">Done</p>
-            <p class="text-2xl font-bold">{{ completedCount }}</p>
+            <p class="text-xl sm:text-2xl font-bold">{{ completedCount }}</p>
         </div>
 
     </div>
 
-    <!-- ================= FILTER + ACTION BAR ================= -->
-    <div class="flex justify-between items-center bg-gray-50 border rounded-lg px-4 py-2 mb-4">
+    <!-- ================= CONDITIONAL AREA ================= -->
 
-        <div class="flex gap-6 text-sm font-medium">
+    @if (showAnalytics) {
+
+    <app-analytics [tasks]="tasks" (hideAnalytics)="hideAnalytics()">
+    </app-analytics>
+
+    } @else {
+
+    <!-- ================= FILTER BAR ================= -->
+    <div
+        class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between bg-gray-50 border rounded-lg px-4 py-3 mb-4">
+
+        <!-- FILTERS -->
+        <div class="flex flex-wrap gap-4 text-sm font-medium">
+
             <button (click)="changeFilter('ALL')" [ngClass]="{
-          'text-blue-600 font-semibold': selectedFilter === 'ALL',
-          'text-gray-500': selectedFilter !== 'ALL'
-        }">
+                'text-blue-600 font-semibold': selectedFilter === 'ALL',
+                'text-gray-500': selectedFilter !== 'ALL'
+            }">
                 All
             </button>
 
             <button (click)="changeFilter(TaskStatus.TO_DO)" [ngClass]="{
-          'text-blue-600 font-semibold': selectedFilter === TaskStatus.TO_DO,
-          'text-gray-500': selectedFilter !== TaskStatus.TO_DO
-        }">
+                'text-blue-600 font-semibold': selectedFilter === TaskStatus.TO_DO,
+                'text-gray-500': selectedFilter !== TaskStatus.TO_DO
+            }">
                 To-Do
             </button>
 
             <button (click)="changeFilter(TaskStatus.IN_PROGRESS)" [ngClass]="{
-          'text-blue-600 font-semibold': selectedFilter === TaskStatus.IN_PROGRESS,
-          'text-gray-500': selectedFilter !== TaskStatus.IN_PROGRESS
-        }">
+                'text-blue-600 font-semibold': selectedFilter === TaskStatus.IN_PROGRESS,
+                'text-gray-500': selectedFilter !== TaskStatus.IN_PROGRESS
+            }">
                 In Progress
             </button>
 
             <button (click)="changeFilter(TaskStatus.COMPLETED)" [ngClass]="{
-          'text-blue-600 font-semibold': selectedFilter === TaskStatus.COMPLETED,
-          'text-gray-500': selectedFilter !== TaskStatus.COMPLETED
-        }">
+                'text-blue-600 font-semibold': selectedFilter === TaskStatus.COMPLETED,
+                'text-gray-500': selectedFilter !== TaskStatus.COMPLETED
+            }">
                 Done
             </button>
 
-            <!-- UI only -->
             <button class="text-gray-500">
                 Assigned to Me
             </button>
+
         </div>
 
-        <div class="flex gap-3">
+        <!-- ACTION BUTTONS -->
+        <div class="flex flex-wrap gap-2">
+
             <button class="border border-purple-500 text-purple-600 px-3 py-1 rounded hover:bg-purple-50 text-sm">
                 Sort: Priority
+            </button>
+
+            <button
+                class="border border-purple-500 text-purple-600 px-3 py-1 rounded hover:bg-purple-50 text-sm lg:hidden"
+                (click)="showActivity = !showActivity">
+
+                {{ showActivity ? 'Close Activity' : 'Activity' }}
+
             </button>
 
             <button class="border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 text-sm"
@@ -84,19 +99,26 @@
             <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm" (click)="openAddTask()">
                 + Add Task
             </button>
+
         </div>
 
     </div>
 
     <!-- ================= MAIN GRID ================= -->
-    <!-- IMPORTANT: min-h-0 allows children to scroll -->
-    <div class="flex-1 grid lg:grid-cols-4 gap-6 min-h-0">
 
-        <!-- ================= TASK SECTION (SCROLLABLE) ================= -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
+
+        <!-- ================= TASK SECTION ================= -->
+
+        @if(!showActivity){
+
         <div class="lg:col-span-3 bg-white rounded-xl shadow flex flex-col min-h-0">
 
             <div class="flex-1 overflow-y-auto p-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                @if(filteredTasks.length > 0){
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
 
                     @for (task of filteredTasks; track task.id) {
 
@@ -107,65 +129,81 @@
                     }
 
                 </div>
+
+                } @else {
+
+                <!-- ================= EMPTY STATES ================= -->
+
+                @if(tasks.length === 0){
+
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-300 mb-4" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5h6m2 0a2 2 0 012 2v12a2 2 0 01-2
+                          2H7a2 2 0 01-2-2V7a2 2 0
+                          012-2m2 0V3h6v2" />
+                    </svg>
+
+                    <p class="text-gray-500 mb-4">
+                        No tasks yet. Try adding one.
+                    </p>
+
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                        (click)="openAddTask()">
+                        Add Your First Task
+                    </button>
+
+                </div>
+
+                } @else {
+
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-300 mb-4" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4a1 1 0 011-1h16a1 1 0
+                          011 1v2a1 1 0 01-.293.707L14
+                          13.414V19a1 1 0 01-1.447.894l-2
+                          -1A1 1 0 019 18v-4.586L3.293
+                          6.707A1 1 0 013 6V4z" />
+                    </svg>
+
+                    <p class="text-gray-500">
+                        No tasks for this filter.
+                    </p>
+
+                </div>
+
+                }
+
+                }
+
             </div>
 
         </div>
 
-        <!-- ================= ACTIVITY FEED (SCROLLABLE) ================= -->
-        <div class="lg:col-span-1 bg-white rounded-xl shadow flex flex-col min-h-0">
+        }
 
-            <div class="flex justify-between items-center px-4 py-3 border-b">
-                <h3 class="text-purple-600 font-semibold">Activity Feed</h3>
-                <button class="border border-purple-500 text-purple-600 px-3 py-1 rounded hover:bg-purple-50 text-sm">
-                    Refresh
-                </button>
-            </div>
+        <!-- ================= ACTIVITY FEED ================= -->
 
-            <div class="flex-1 overflow-y-auto">
+        <!-- Mobile Activity -->
+        @if(showActivity){
+        <app-activity-feed class="lg:hidden"></app-activity-feed>
+        }
 
-                <!-- Activity items (UI only, unchanged) -->
-                <div class="px-4 py-3 border-b flex gap-3">
-                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">IC
-                    </div>
-                    <div>
-                        <p class="text-sm">Alex J. commented on Fix Login Bug</p>
-                        <span class="text-xs text-gray-400">5m ago</span>
-                    </div>
-                </div>
-
-                <div class="px-4 py-3 border-b flex gap-3">
-                    <div class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs">
-                        JS</div>
-                    <div>
-                        <p class="text-sm">Sam K. changed status of Design Dashboard to In Progress</p>
-                        <span class="text-xs text-gray-400">12m ago</span>
-                    </div>
-                </div>
-
-                <div class="px-4 py-3 border-b flex gap-3">
-                    <div class="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs">
-                        AI</div>
-                    <div>
-                        <p class="text-sm">Alex J. assigned Write Unit Tests to Sam K.</p>
-                        <span class="text-xs text-gray-400">28m ago</span>
-                    </div>
-                </div>
-
-                <div class="px-4 py-3 border-b flex gap-3">
-                    <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">
-                        AJ</div>
-                    <div>
-                        <p class="text-sm">Alex J. created task Setup Spring Boot</p>
-                        <span class="text-xs text-gray-400">1h ago</span>
-                    </div>
-                </div>
-
-            </div>
+        <!-- Desktop Activity -->
+        <div class="hidden lg:flex lg:col-span-1 min-h-0">
+            <app-activity-feed class="w-full"></app-activity-feed>
         </div>
 
     </div>
+    }
 
-    <!-- ================= MODALS (UNCHANGED) ================= -->
+    <!-- ================= MODALS ================= -->
+
     @if (isAddTaskOpen) {
     <app-add-task [users]="users" [task]="editingTask" [isEditMode]="editingTask !== null" (close)="closeAddTask()"
         (save)="handleSave($event)">
@@ -179,5 +217,3 @@
     }
 
 </div>
-
-}

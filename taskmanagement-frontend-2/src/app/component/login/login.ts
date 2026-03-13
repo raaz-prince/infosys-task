@@ -33,8 +33,13 @@ export class Login {
 
     this.authService.login(request).subscribe({
       next: (res: LoginResponse) => {
-        console.log(res.message);
-        this.toastr.success(res?.message ?? 'Login Successful', 'Success', { timeOut: 2500});
+        this.toastr.success(
+          res.user?.fullName
+            ? `Welcome back, ${res.user.fullName}`
+            : 'Login Successful',
+          'Logged In',
+          { timeOut: 2500 }
+        );
         this.router.navigate(['/dashboard']);
       },
       error: err => {

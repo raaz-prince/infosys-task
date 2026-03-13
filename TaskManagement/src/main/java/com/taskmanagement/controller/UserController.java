@@ -24,7 +24,7 @@ public class UserController {
 		return userRepository.findAll()
 				.stream()
 				.filter(user -> !user.getEmail().equals(principal.getName()))
-				.map(user -> new UserDto(user.getId(), user.getName()))
+				.map(user -> new UserDto(user.getId(), user.getName(), user.getEmail()))
 				.toList();
 	}
 }

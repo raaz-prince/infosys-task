@@ -1,6 +1,7 @@
 package com.taskmanagement.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.taskmanagement.auth.entities.User;
@@ -59,4 +60,19 @@ public class Task {
 			cascade = CascadeType.ALL,
 			orphanRemoval = true)
 	private List<Comment> comments;
+	
+	public void addComment(Comment comment) {
+		if(comments == null){
+			comments = new ArrayList<>();
+		}
+		comments.add(comment);
+		comment.setTask(this);
+	}
+	
+	public void removeComment(Comment comment) {
+		if(comments != null) {
+			comments.remove(comment);
+		}
+		comment.setTask(null);
+	}
 }

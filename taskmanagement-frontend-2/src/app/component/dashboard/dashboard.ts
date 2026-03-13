@@ -16,11 +16,13 @@ import { UpdateTaskRequest } from '../../models/task/update-task-request';
 import { User } from '../../models/user/user-modal';
 import { UserService } from '../../service/user/user-service';
 import { Analytics } from '../analytics/analytics';
+import { ActivityFeed } from '../activity-feed/activity-feed';
+import { ActivityService } from '../../service/activity/activity-service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddTask, TaskCard, TaskModal, Analytics],
+  imports: [CommonModule, FormsModule, AddTask, TaskCard, TaskModal, Analytics, ActivityFeed],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
@@ -30,7 +32,8 @@ export class Dashboard implements OnInit {
   selectedFilter: TaskStatus | 'ALL' = 'ALL';
   isAddTaskOpen = false;
 
-  showAnalytics = true;
+  showAnalytics = false;
+  showActivity = false;
 
   selectedTask: Task | null = null;
   editingTask: Task | null = null;
@@ -44,7 +47,8 @@ export class Dashboard implements OnInit {
     private taskService: TaskService,
     private userService: UserService,
     private toastr: ToastrService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private activityService: ActivityService
   ) { }
 
   ngOnInit(): void {
@@ -97,9 +101,10 @@ export class Dashboard implements OnInit {
       next: (res: Task) => {
         this.toastr.success('Added Successfully', 'Success', { timeOut: 1500 });
 
-        this.tasks = [...this.tasks, res];
+        this.tasks = [res, ...this.tasks];
         this.updateFilteredTasks();
         this.closeAddTask();
+        this.activityService.notifyActivityUpdated();
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -134,6 +139,7 @@ export class Dashboard implements OnInit {
 
         this.updateFilteredTasks();
         this.closeAddTask();
+        this.activityService.notifyActivityUpdated();
         this.cdr.markForCheck();
 
       },
@@ -156,6 +162,7 @@ export class Dashboard implements OnInit {
         this.tasks = this.tasks.filter(t => t.id !== taskId);
         this.updateFilteredTasks();
         this.selectedTask = null;
+        this.activityService.notifyActivityUpdated();
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -180,6 +187,7 @@ export class Dashboard implements OnInit {
         );
 
         this.updateFilteredTasks();
+        this.activityService.notifyActivityUpdated();
         this.cdr.markForCheck();
       }
     });

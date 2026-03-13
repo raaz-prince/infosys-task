@@ -54,6 +54,7 @@ public class CommentService {
 				.createdAt(LocalDateTime.now())
 				.build();
 		
+		task.addComment(comment);
 		Comment savedComment = commentRepo.save(comment);
 	
 		activityLogService.logAction(taskId, author.getEmail(), ActionCode.COMMENT_ADDED,

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.taskmanagement.dto.ActivityDTO;
 import com.taskmanagement.entity.Activity;
 import com.taskmanagement.service.ActivityLogService;
 
@@ -20,7 +21,7 @@ public class ActivityController {
 	private final ActivityLogService logService;
 	
 	@GetMapping
-	public List<Activity> getActivity(Principal principal){
+	public List<ActivityDTO> getActivity(Principal principal){
 		return logService.getRecentActiviy(principal.getName());
 	}
 }

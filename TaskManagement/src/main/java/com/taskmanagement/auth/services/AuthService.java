@@ -14,6 +14,7 @@ import com.taskmanagement.auth.entities.Role;
 import com.taskmanagement.auth.entities.User;
 import com.taskmanagement.auth.repositories.UserRepository;
 import com.taskmanagement.auth.security.CustomUserDetails;
+import com.taskmanagement.dto.UserDto;
 import com.taskmanagement.exception.LoginFailedException;
 import com.taskmanagement.exception.UserAlreadyExistsException;
 
@@ -41,10 +42,10 @@ public class AuthService {
 	            .role(Role.ROLE_USER)
 	            .build();
 
-	    User savedUser = userRepository.save(user);
+	    userRepository.save(user);
 
 	  
-	    String message = savedUser.getName() + " registered successfully!";
+	    String message = "Account created successfully. Please login.";
 
 	    return new RegisterResponse(message);
 	}
@@ -70,8 +71,6 @@ public class AuthService {
 	            new CustomUserDetails(user)
 	    );
 
-	    String message = user.getName() + " logged in successfully!";
-
-	    return new LoginResponse(message, token);
+	    return new LoginResponse(token, new UserDto(user.getId(), user.getName(), user.getEmail()));
 	}
 }

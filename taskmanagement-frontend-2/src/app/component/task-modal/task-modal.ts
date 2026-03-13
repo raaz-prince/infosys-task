@@ -8,6 +8,7 @@ import { Comment } from '../../models/comment/comment-model';
 import { CommentRequest } from '../../models/comment/comment-request';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '../../pipe/time-ago-pipe';
+import { ActivityService } from '../../service/activity/activity-service';
 
 @Component({
   selector: 'app-task-modal',
@@ -30,7 +31,11 @@ export class TaskModal {
   commentText: string = '';
   commentsLoading: boolean = false;
 
-  constructor(private commentService: CommentService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private commentService: CommentService, 
+    private cdr: ChangeDetectorRef,
+    private activityService: ActivityService
+  ) {}
 
   ngOnChanges(): void {
     if(this.task){
@@ -68,6 +73,7 @@ export class TaskModal {
         this.comments = [...this.comments, res];
         console.log(res);
         this.commentText = '';
+        this.activityService.notifyActivityUpdated();
         this.cdr.markForCheck();
       },
       error: (err) => {

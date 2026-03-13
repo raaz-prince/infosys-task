@@ -1,17 +1,31 @@
 <header class="bg-slate-800 text-white shadow-lg">
     <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
 
-        <!-- Brand (dot + TaskFlow) -->
+        <!-- Brand -->
         <a routerLink="/" class="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-wide cursor-pointer">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-900"></span>
             TaskFlow
         </a>
 
-        <!-- Right: greeting + profile pill -->
+        <!-- Right: greeting + profile pill + auth links -->
         <div class="flex items-center gap-3">
-            <span class="hidden sm:block text-sm sm:text-base opacity-90">Hello, Alex</span>
-            <div class="w-9 h-9 rounded-md bg-white/20 border border-white/20"></div>
 
+            <!-- Greeting (only when logged in and user is present) -->
+            @if (authService.isAuthenticated()) {
+            @if (user$ | async; as user) {
+            <span class="hidden sm:block text-sm sm:text-base opacity-90">
+                Hello, {{ user.fullName }}
+            </span>
+
+            <!-- simple profile placeholder (first letter) -->
+            <div
+                class="w-9 h-9 rounded-md bg-white/20 border border-white/20 flex items-center justify-center text-sm font-semibold uppercase select-none">
+                {{ user?.fullName?.charAt(0) }}
+            </div>
+            }
+            }
+
+            <!-- Not authenticated: show Register/Login -->
             @if (!authService.isAuthenticated()) {
             <nav class="flex items-center gap-4 text-sm sm:text-base">
                 <a routerLink="/register"
@@ -25,6 +39,7 @@
             </nav>
             }
 
+            <!-- Authenticated: show Logout -->
             @if (authService.isAuthenticated()) {
             <button (click)="logout()"
                 class="text-sm sm:text-base cursor-pointer hover:underline underline-offset-4 decoration-2 hover:text-indigo-100">

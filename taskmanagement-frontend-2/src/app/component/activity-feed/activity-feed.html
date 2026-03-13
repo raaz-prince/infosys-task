@@ -1,0 +1,76 @@
+<div class="bg-white rounded-xl shadow flex flex-col h-full">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center px-4 py-3 border-b">
+
+        <h3 class="text-purple-600 font-semibold">
+            Activity Feed
+        </h3>
+
+        <button class="border border-purple-500 text-purple-600 px-3 py-1 rounded hover:bg-purple-50 text-sm"
+            (click)="loadActivities()">
+
+            Refresh
+
+        </button>
+
+    </div>
+
+    <!-- Activity List -->
+    <div class="overflow-y-auto max-h-150">
+
+        <!-- Loader -->
+        @if(loading){
+
+        <div class="flex justify-center items-center py-10">
+
+            <div class="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+
+        </div>
+
+        }
+
+        <!-- No activities -->
+        @else if(!loading && activities.length === 0){
+
+        <div class="p-6 text-center text-gray-400 text-sm">
+            No activity yet
+        </div>
+
+        }
+
+        <!-- Activities -->
+        @else {
+
+        @for(activity of activities; track activity.id){
+
+        <div class="px-4 py-3 flex gap-3 border-b last:border-none">
+
+            <!-- Avatar -->
+            <div class="w-8 h-8 text-white rounded-full flex items-center justify-center text-xs font-semibold"
+                [ngClass]="getAvatarColor(activity.userInitials)">
+                {{ activity.userInitials }}
+            </div>
+
+            <!-- Content -->
+            <div>
+
+                <p class="text-sm font-medium text-gray-800">
+                    {{ activity.message }}
+                </p>
+
+                <span class="text-xs text-gray-400">
+                    {{ activity.createdAt | timeAgo }}
+                </span>
+
+            </div>
+
+        </div>
+
+        }
+
+        }
+
+    </div>
+
+</div>
